@@ -1,0 +1,16 @@
+# Fly Machines escape hatch for one-off / cron batch.
+app = "<PROJECT_NAME>"
+primary_region = "nrt"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  LOG_LEVEL = "INFO"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
+
+# For cron: use Fly Machines with --schedule flag instead of fly deploy.

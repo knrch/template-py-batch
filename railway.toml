@@ -1,0 +1,12 @@
+# Batch / cron config. Adjust schedule per use-case.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+restartPolicyType = "NEVER"
+
+# For scheduled execution, configure a cron service in Railway:
+# [[services]]
+# name = "<PROJECT_NAME>-cron"
+# cron = "0 3 * * *"   # daily at 03:00 UTC

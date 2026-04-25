@@ -1,0 +1,25 @@
+pre-commit:
+  parallel: true
+  commands:
+    gitleaks:
+      run: gitleaks protect --staged --no-banner --redact
+      fail_text: "Secret detected. Rotate it, then unstage."
+    ruff-check:
+      glob: "**/*.py"
+      run: uv run ruff check {staged_files}
+    ruff-format:
+      glob: "**/*.py"
+      run: uv run ruff format --check {staged_files}
+    hadolint:
+      glob: "**/Dockerfile*"
+      run: hadolint {staged_files}
+    shellcheck:
+      glob: "**/*.sh"
+      run: shellcheck {staged_files}
+
+pre-push:
+  commands:
+    tests:
+      run: just test
+    typecheck:
+      run: uv run pyright
