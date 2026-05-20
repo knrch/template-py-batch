@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    # Daily 03:00 UTC — fresh advisory check against pinned digests
+    - cron: '0 3 * * *'
 
 permissions:
   contents: read
@@ -24,22 +27,39 @@ jobs:
       - run: uv run pytest
       - run: uv run pip-audit
 
-  supply-chain:
+  static-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh \
+            | sh -s -- -b /usr/local/bin
+      - name: Install semgrep
+        run: pipx install semgrep
+      - name: Gitleaks (full tree)
+        run: gitleaks dir --no-banner -c .gitleaks.toml .
+      - name: Semgrep (p/python)
+        run: semgrep scan --metrics=off --error --disable-version-check --config=p/python src
+
+  supply-chain-audit:
+    # Heavier job; runs on schedule + manual.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     needs: test
     steps:
       - uses: actions/checkout@v5
-      - uses: sigstore/cosign-installer@v3
-      - name: Verify Chainguard image
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install 3.14
+      - name: Install osv-scanner
+        run: go install github.com/google/osv-scanner/cmd/osv-scanner@latest
+      - name: Install pip-audit
+        run: pipx install pip-audit
+      - name: Install trivy
         run: |
-          cosign verify cgr.dev/chainguard/python \
-            --certificate-identity-regexp '.*chainguard.*' \
-            --certificate-oidc-issuer-regexp '.*'
-      - uses: anchore/sbom-action@v0
-        with:
-          format: spdx-json
-          output-file: sbom.spdx.json
-      - uses: actions/upload-artifact@v4
-        with:
-          name: sbom
-          path: sbom.spdx.json
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+            | sh -s -- -b /usr/local/bin
+      - name: Run audit-all (image findings informational)
+        run: scripts/audit-all.sh --with-images-informational

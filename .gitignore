@@ -12,6 +12,10 @@ __pycache__/
 .env.local
 SECRETS.md
 
+# Audit artifacts
+sbom.json
+sbom.spdx.json
+
 # IDE
 .idea/
 .vscode/

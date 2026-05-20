@@ -1,21 +1,15 @@
+# lefthook is the trigger; the three-stage logic (gitleaks → semgrep →
+# conditional audit-all.sh) lives in scripts/git-hooks/pre-commit so it
+# can also be invoked directly via `core.hooksPath` for users who prefer
+# that. `scripts/install-hooks.sh` flips between the two install modes.
+
 pre-commit:
-  parallel: true
   commands:
-    gitleaks:
-      run: gitleaks protect --staged --no-banner --redact
-      fail_text: "Secret detected. Rotate it, then unstage."
-    ruff-check:
-      glob: "**/*.py"
-      run: uv run ruff check {staged_files}
-    ruff-format:
-      glob: "**/*.py"
-      run: uv run ruff format --check {staged_files}
-    hadolint:
-      glob: "**/Dockerfile*"
-      run: hadolint {staged_files}
-    shellcheck:
-      glob: "**/*.sh"
-      run: shellcheck {staged_files}
+    audit-pipeline:
+      # Runs gitleaks (staged) → semgrep (staged) → audit-all (conditional
+      # on dep-manifest / tooling changes). Honors SKIP_STATIC_SCAN,
+      # SKIP_GITLEAKS, SKIP_SEMGREP, SKIP_AUDIT env vars.
+      run: scripts/git-hooks/pre-commit
 
 pre-push:
   commands:

@@ -33,10 +33,26 @@ logs:
     railway logs --json | jq -r '.message // .'
 
 hooks-install:
-    lefthook install
+    scripts/install-hooks.sh
 
+# Supply-chain audits ------------------------------------------------------
+
+# Lockfile + source scans (gitleaks + semgrep). No image scanning.
+audit:
+    scripts/audit-all.sh
+
+# Above + Trivy on digest-pinned bases (HIGH/CRITICAL gate).
+audit-images:
+    scripts/audit-all.sh --with-images
+
+# Above, but Trivy findings are advisory (used in scheduled CI).
+audit-images-informational:
+    scripts/audit-all.sh --with-images-informational
+
+# Audited dependency operations — never bare `uv add`.
+safe-uv +args:
+    scripts/safe-uv.sh {{args}}
+
+# SBOM for the built image (optional artifact).
 sbom:
     syft scan dir:. -o spdx-json > sbom.json
-
-verify-images:
-    cosign verify cgr.dev/chainguard/python --certificate-identity-regexp '.*chainguard.*' --certificate-oidc-issuer-regexp '.*'
