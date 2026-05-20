@@ -35,6 +35,10 @@ logs:
 hooks-install:
     scripts/install-hooks.sh
 
+# Pull latest cursor rules + prompts from cursor-harness
+cursor-sync:
+    scripts/sync-from-harness.sh
+
 # Supply-chain audits ------------------------------------------------------
 
 # Lockfile + source scans (gitleaks + semgrep). No image scanning.

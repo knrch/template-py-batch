@@ -42,6 +42,7 @@ uv run python -m app
 | Add a dep (audited) | `just safe-uv add <pkg>` |
 | Build image | `just docker-build` |
 | Run image | `just docker-run` |
+| Refresh cursor rules from harness | `just cursor-sync` |
 | Deploy | `just deploy` |
 | Tail logs | `just logs` |
 
